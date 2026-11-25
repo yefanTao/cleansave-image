@@ -3,7 +3,7 @@
   "name": "CleanSave — Save Image as Type (JPG, PNG, WebP) · Open Source",
   "short_name": "CleanSave",
   "version": "1.0.0",
-  "description": "Zero site permissions, zero tracking, open-source Save Image as Type alternative. Convert WebP/AVIF to JPG (white BG), PNG, or WebP locally.",
+  "description": "Zero site permissions, zero tracking, open-source Save Image as Type alternative. Convert WebP/AVIF to JPG (white BG) or PNG.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

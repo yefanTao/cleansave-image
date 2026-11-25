@@ -13,6 +13,7 @@ $manifest = Get-Content -Raw -Encoding UTF8 $manifestPath | ConvertFrom-Json
 
 if ($manifest.manifest_version -ne 3) { throw "manifest_version must be 3" }
 if ($manifest.name.Length -gt 75) { throw "manifest name exceeds 75 chars ($($manifest.name.Length))" }
+if ($manifest.description.Length -gt 132) { throw "manifest description exceeds 132 chars ($($manifest.description.Length))" }
 if ($manifest.PSObject.Properties['host_permissions']) { throw "FORBIDDEN: host_permissions present in manifest.json!" }
 if ($manifest.PSObject.Properties['optional_host_permissions']) { throw "FORBIDDEN: optional_host_permissions present in manifest.json!" }
 if ($manifest.PSObject.Properties['content_scripts']) { throw "FORBIDDEN: persistent content_scripts present in manifest.json!" }
