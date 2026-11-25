@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanSave Image — Zero-Permission Open-Source Save Image as Type (JPG, PNG, WebP)</title>
+  <meta name="description" content="The safe, zero-site-permission, open-source Chrome MV3 replacement for Save Image as Type. Convert WebP/AVIF to JPG (white background), PNG, or WebP 100% locally." />
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --muted: #475569;
+      --subtle: #64748B;
+      --cobalt: #2563EB;
+      --cobalt-dark: #1D4ED8;
+      --cobalt-soft: #EFF6FF;
+      --emerald: #10B981;
+      --emerald-soft: #ECFDF5;
+      --emerald-text: #047857;
+      --danger: #DC2626;
+      --danger-soft: #FEF2F2;
+      --danger-border: #FECACA;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--cobalt); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; color: var(--text); letter-spacing: -0.02em; }
+    .brand svg { width: 32px; height: 32px; border-radius: 8px; }
+    .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 600; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--cobalt); text-decoration: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--cobalt); color: #FFFFFF; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25); }
+    .btn-primary:hover { background: var(--cobalt-dark); text-decoration: none; transform: translateY(-1px); }
+    .btn-secondary { background: #FFFFFF; color: var(--text); border-color: #CBD5E1; }
+    .btn-secondary:hover { background: #F1F5F9; text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      padding: 64px 0 52px;
+      background: radial-gradient(circle at 50% 0%, #EFF6FF 0%, #F8FAFC 65%);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .badge-emerald { background: var(--emerald-soft); color: var(--emerald-text); border: 1px solid #A7F3D0; }
+    .badge-cobalt { background: var(--cobalt-soft); color: var(--cobalt); border: 1px solid #BFDBFE; }
+    h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      margin: 0 auto 16px;
+      max-width: 820px;
+    }
+    .hero p {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto 28px;
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .hero-note { font-size: 13px; color: var(--subtle); margin-top: 14px; }
+
+    /* Sections */
+    section.block { padding: 64px 0; }
+    section.block-alt { background: #FFFFFF; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .section-head { text-align: center; max-width: 700px; margin: 0 auto 38px; }
+    .section-head h2 { font-size: 28px; letter-spacing: -0.025em; margin: 0 0 10px; }
+    .section-head p { color: var(--muted); margin: 0; font-size: 15.5px; }
+
+    /* Audit Comparison */
+    .compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+    @media (max-width: 820px) { .compare-grid { grid-template-columns: 1fr; } .nav-links { display: none; } }
+
+    .audit-card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+    .audit-card.good { border-color: #10B981; }
+    .audit-card.bad { border-color: var(--danger-border); }
+    .audit-top {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .audit-card.good .audit-top { background: var(--emerald-soft); }
+    .audit-card.bad .audit-top { background: var(--danger-soft); }
+    .audit-title { font-weight: 800; font-size: 15px; }
+    .audit-body { padding: 18px 20px; }
+
+    pre.code-box {
+      margin: 0 0 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #0F172A;
+      color: #E2E8F0;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+    .code-good { color: #34D399; font-weight: 700; }
+    .code-bad { color: #FCA5A5; font-weight: 700; }
+    .code-dim { color: #94A3B8; }
+
+    .prompt-sim {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .prompt-sim.clean { background: var(--emerald-soft); border: 1px solid #A7F3D0; color: var(--emerald-text); }
+    .prompt-sim.scary { background: var(--danger-soft); border: 1px solid var(--danger-border); color: #991B1B; }
+
+    /* Features */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 820px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feat-card h3 { margin: 0 0 8px; font-size: 16px; }
+    .feat-card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 860px; margin: 0 auto; }
+    @media (max-width: 760px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .price-card.pro { border: 2px solid var(--cobalt); box-shadow: 0 12px 30px rgba(37, 99, 235, 0.12); }
+    .price-num { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; margin: 10px 0 4px; }
+    .price-num span { font-size: 14px; font-weight: 600; color: var(--subtle); }
+    .checklist { list-style: none; padding: 0; margin: 18px 0 24px; }
+    .checklist li { padding: 6px 0; font-size: 14px; color: var(--text); }
+    .checklist li::before { content: "✓ "; color: var(--emerald); font-weight: 800; }
+
+    /* Privacy */
+    .privacy-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .privacy-box h3 { margin-top: 0; }
+    .privacy-box ul { margin: 10px 0 0; padding-left: 20px; color: var(--muted); }
+    .privacy-box li { margin-bottom: 6px; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--subtle);
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D4ED8"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="58" height="58" rx="14" fill="url(#g)"/>
+          <rect x="13" y="14" width="34" height="29" rx="5" fill="#FFFFFF"/>
+          <rect x="16" y="17" width="28" height="23" rx="3" fill="#DBEAFE"/>
+          <circle cx="23" cy="23" r="3.2" fill="#3B82F6"/>
+          <path d="M16 40L27 27L37 40H16Z" fill="#60A5FA"/>
+          <path d="M25 40L36 25L44 40H25Z" fill="#2563EB"/>
+          <circle cx="46" cy="45" r="12" fill="#FFFFFF"/>
+          <circle cx="46" cy="45" r="10.2" fill="#10B981"/>
+          <path d="M46 40V49M42 46L46 50L50 46" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        CleanSave Image
+      </a>
+      <div class="nav-links">
+        <a href="#audit">Permission Audit</a>
+        <a href="#features">Features</a>
+        <a href="#pro">Free vs $9 Pro</a>
+        <a href="#privacy">Privacy Policy</a>
+      </div>
+      <a class="btn btn-primary" href="#pro" style="padding:8px 14px;font-size:13px;">Get Extension</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <div class="badge-row">
+        <span class="badge badge-emerald">✓ Zero &lt;all_urls&gt; Site Permissions</span>
+        <span class="badge badge-cobalt">100% Open Source · Pure Local Canvas</span>
+      </div>
+      <h1>The Safe, Zero-Permission Replacement for <em>Save Image as Type</em></h1>
+      <p>
+        After Chrome purged the 1M-user "Save Image as Type" extension for affiliate cookie hijacking across 578 retail sites,
+        we built <strong>CleanSave Image</strong>: right-click WebP/AVIF to JPG (with crisp white background) or PNG,
+        plus a Pro batch page ZIP converter — with <strong>zero host permissions</strong> and <strong>zero tracking</strong>.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://chromewebstore.google.com/" target="_blank" rel="noopener noreferrer">
+          Install Free on Chrome Web Store
+        </a>
+        <a class="btn btn-secondary" href="#audit">
+          Audit manifest.json Side-by-Side
+        </a>
+      </div>
+      <div class="hero-note">
+        Manifest V3 · Zero backend servers · Unlimited free right-click saves · Optional $9 one-time Pro upgrade · Open-source code on GitHub
+      </div>
+    </div>
+  </header>
+
+  <section id="audit" class="block block-alt">
+    <div class="container">
+      <div class="section-head">
+        <h2>Inspect Our Exact <code style="font-family:var(--mono);">manifest.json</code> Before Installing</h2>
+        <p>
+          Never trust an image saver that asks to "Read and change all your data on all websites."
+          Compare our real Manifest V3 permissions against typical adware clones:
+        </p>
+      </div>
+
+      <div class="compare-grid">
+        <div class="audit-card good">
+          <div class="audit-top">
+            <span class="audit-title">✓ CleanSave Image (Auditable MV3)</span>
+            <span class="badge badge-emerald">SAFE</span>
+          </div>
+          <div class="audit-body">
+            <pre class="code-box">{
+  "manifest_version": 3,
+  "permissions": [
+    <span class="code-good">"contextMenus"</span>,
+    <span class="code-good">"downloads"</span>,
+    <span class="code-good">"offscreen"</span>,
+    <span class="code-good">"storage"</span>,
+    <span class="code-good">"activeTab"</span>,
+    <span class="code-good">"scripting"</span>
+  ]
+  <span class="code-dim">// ZERO host_permissions!</span>
+  <span class="code-dim">// NO &lt;all_urls&gt;, NO cookies, NO webRequest, NO tabs!</span>
+}</pre>
+            <div class="prompt-sim clean">
+              <strong>Chrome Install Prompt:</strong> Only asks to manage your downloads.
+              <strong>NEVER</strong> asks to read browsing history, cookies, or website data in the background.
+            </div>
+          </div>
+        </div>
+
+        <div class="audit-card bad">
+          <div class="audit-top">
+            <span class="audit-title">✕ Purged / Malware Clone Extensions</span>
+            <span class="badge" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;">HIGH RISK</span>
+          </div>
+          <div class="audit-body">
+            <pre class="code-box">{
+  "manifest_version": 3,
+  "permissions": [
+    <span class="code-bad">"tabs"</span>,
+    <span class="code-bad">"cookies"</span>,
+    <span class="code-bad">"webRequest"</span>,
+    "contextMenus", "downloads"
+  ],
+  "host_permissions": [
+    <span class="code-bad">"&lt;all_urls&gt;"</span>,
+    <span class="code-bad">"https://*/*"</span>
+  ]
+}</pre>
+            <div class="prompt-sim scary">
+              <strong>Chrome Warning:</strong> <em>"Read and change all your data on all websites"</em> — lets silent background scripts inject affiliate cookies on Amazon, Shopify, and checkout pages.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="block">
+    <div class="container">
+      <div class="section-head">
+        <h2>Built for E-Commerce Sellers, Designers &amp; Everyday Chrome Users</h2>
+        <p>Every pixel is decoded and re-encoded locally inside your browser using HTML5 Canvas — zero cloud uploads.</p>
+      </div>
+
+      <div class="feat-grid">
+        <div class="feat-card">
+          <h3>Right-Click WebP/AVIF → JPG/PNG</h3>
+          <p>Right-click any image on the web and choose <strong>Save as JPG (92%)</strong>, <strong>Save as PNG (Lossless)</strong>, or <strong>Save as WebP (90%)</strong>. Instant local conversion.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Transparent PNG/WebP → Crisp White BG</h3>
+          <p>Never get ugly black backgrounds again. CleanSave automatically composites transparent pixels onto pure white (<code style="font-family:var(--mono);">#FFFFFF</code>) before encoding JPG.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Batch Page Ripper &amp; One-Click ZIP</h3>
+          <p>Click the toolbar icon to scan images on the active tab (via <code style="font-family:var(--mono);">activeTab</code> only), filter by minimum resolution (e.g. ≥ 500px), convert all WebP/AVIF, and download a single <code style="font-family:var(--mono);">.zip</code>.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Amazon, Shopify &amp; Etsy Square Presets</h3>
+          <p>Automatically pad and fit product photos onto crisp <strong>2000×2000</strong>, <strong>1200×1200</strong>, or <strong>1080×1080</strong> white-background square canvases with zero cropping.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Custom Quality &amp; Filename Templates</h3>
+          <p>Dial in exact JPG/WebP quality (50–100%) and auto-name downloads using <code style="font-family:var(--mono);">{domain}-{date}-{index}</code> or <code style="font-family:var(--mono);">{name}-{width}x{height}</code>.</p>
+        </div>
+        <div class="feat-card">
+          <h3>Offline Local Drop &amp; Clipboard Paste</h3>
+          <p>Drop local <code style="font-family:var(--mono);">.webp</code> or <code style="font-family:var(--mono);">.avif</code> folders or press <code style="font-family:var(--mono);">Ctrl+V</code> to convert and batch-ZIP offline — even for strict no-CORS CDNs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pro" class="block block-alt">
+    <div class="container">
+      <div class="section-head">
+        <h2>Simple, Honest Pricing — Zero Subscriptions</h2>
+        <p>Core right-click conversion is 100% free forever. Power users can unlock batch ZIP &amp; e-commerce presets once for $9 (no subscriptions).</p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div>
+            <span class="badge badge-emerald">Free Forever</span>
+            <div class="price-num">$0 <span>/ no account needed</span></div>
+            <p style="color:var(--muted);font-size:14px;">Everything you need to replace Save Image as Type safely.</p>
+            <ul class="checklist">
+              <li>Unlimited right-click Save as JPG (92%), PNG, WebP (90%)</li>
+              <li>Automatic white (#FFFFFF) background for transparent → JPG</li>
+              <li>Zero site permissions (<code style="font-family:var(--mono);">&lt;all_urls&gt;</code> never requested)</li>
+              <li>Page image scanner preview + up to 3-image trial ZIP</li>
+              <li>Offline local file drag-and-drop &amp; clipboard converter</li>
+            </ul>
+          </div>
+          <a class="btn btn-secondary" href="https://chromewebstore.google.com/" target="_blank" rel="noopener noreferrer">
+            Add CleanSave Free
+          </a>
+        </div>
+
+        <div class="price-card pro">
+          <div>
+            <span class="badge badge-cobalt">Lifetime License · One-Time</span>
+            <div class="price-num">$9 <span>/ pay once, own forever</span></div>
+            <p style="color:var(--muted);font-size:14px;">Built for Shopify, Amazon &amp; Etsy sellers who convert product sets daily.</p>
+            <ul class="checklist">
+              <li><strong>Unlimited</strong> Batch Page Image Ripper &amp; single-click ZIP</li>
+              <li>E-Commerce Resize Presets: <strong>2000×2000</strong>, <strong>1200×1200</strong>, <strong>1080×1080</strong> White BG</li>
+              <li>Custom Max Width &amp; custom JPG/WebP quality sliders (50–100%)</li>
+              <li>Custom transparent background fill color picker</li>
+              <li>Auto filename patterns (<code style="font-family:var(--mono);">{domain}-{date}-{index}</code>)</li>
+              <li><strong>100% offline license key</strong> — zero phone-home or login</li>
+              <li><em>Note:</em> Fills transparent PNG/WebP with #FFFFFF white BG (not AI background removal). Strict no-CORS CDNs fall back to Download Original + Local Drop.</li>
+            </ul>
+          </div>
+          <!-- Replace href with your live Stripe Payment Link or LemonSqueezy Checkout URL -->
+          <a class="btn btn-primary" href="https://buy.stripe.com/YOUR_CLEANSAVE_PRO_LINK" target="_blank" rel="noopener noreferrer">
+            Get CleanSave Pro Key — $9 One-Time →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy" class="block">
+    <div class="container">
+      <div class="privacy-box">
+        <h3>Privacy Policy &amp; Open-Source Audit Guarantee</h3>
+        <p style="color:var(--muted);margin-bottom:10px;">
+          CleanSave Image is engineered so that spying is architecturally impossible:
+        </p>
+        <ul>
+          <li><strong>Zero data collection:</strong> CleanSave collects no personal data, browsing history, image URLs, cookies, analytics, crash reports, or telemetry.</li>
+          <li><strong>Zero external network requests:</strong> Every conversion runs locally via Chrome's offscreen HTML5 Canvas API and our 150-line zero-dependency PKZIP builder. Even Pro license keys verify mathematically offline without contacting a server.</li>
+          <li><strong>Minimal permissions only:</strong> Only <code style="font-family:var(--mono);">contextMenus</code>, <code style="font-family:var(--mono);">downloads</code>, <code style="font-family:var(--mono);">offscreen</code>, <code style="font-family:var(--mono);">storage</code>, <code style="font-family:var(--mono);">activeTab</code>, and <code style="font-family:var(--mono);">scripting</code>. No <code style="font-family:var(--mono);">&lt;all_urls&gt;</code>, no background content scripts, and no host permissions.</li>
+          <li><strong>Transparent CORS handling:</strong> If a third-party image CDN blocks cross-origin canvas reading, CleanSave never asks for broad spyware permissions; instead it lets you download the original file directly or convert it offline in the Local Drop tab.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      CleanSave Image v1.0.0 · <a href="https://github.com/yefanTao/cleansave-image" target="_blank" rel="noopener noreferrer">Open-Source Repo on GitHub</a> · 100% Client-Side Chrome Manifest V3 · Zero Tracking
+    </div>
+  </footer>
+</body>
+</html>

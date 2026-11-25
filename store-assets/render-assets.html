@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CleanSave Image — Chrome Web Store Assets</title>
+  <style>
+    :root {
+      --cobalt: #2563EB;
+      --cobalt-dark: #1D4ED8;
+      --cobalt-soft: #EFF6FF;
+      --emerald: #10B981;
+      --emerald-soft: #ECFDF5;
+      --emerald-text: #047857;
+      --danger: #DC2626;
+      --danger-soft: #FEF2F2;
+      --text: #0F172A;
+      --muted: #475569;
+      --border: #E2E8F0;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: #FFFFFF; color: var(--text); overflow: hidden; -webkit-font-smoothing: antialiased; }
+    .slide { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+    .slide.active { display: flex; }
+
+    /* Shared decorative background */
+    .bg-hero {
+      background: radial-gradient(circle at 85% 15%, #DBEAFE 0%, #F8FAFC 45%, #FFFFFF 100%);
+    }
+    .bg-cobalt {
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 55%, #1D4ED8 100%);
+      color: #FFFFFF;
+    }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 15px; border-radius: 999px; font-size: 14px; font-weight: 800;
+    }
+    .pill-emerald { background: var(--emerald-soft); color: var(--emerald-text); border: 1.5px solid #6EE7B7; }
+    .pill-cobalt { background: var(--cobalt-soft); color: var(--cobalt); border: 1.5px solid #93C5FD; }
+    .pill-white { background: rgba(255,255,255,0.16); color: #FFFFFF; border: 1.5px solid rgba(255,255,255,0.32); }
+
+    /* Slide 1: Zero Permissions Audit (1280x800) */
+    .s1 { flex-direction: column; padding: 48px 64px; justify-content: space-between; }
+    .s-head { display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+    .brand img { width: 46px; height: 46px; border-radius: 11px; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+    .s1-title { text-align: center; margin: 10px 0 6px; }
+    .s1-title h1 { font-size: 44px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.12; }
+    .s1-title h1 span { color: var(--cobalt); }
+    .s1-title p { font-size: 19px; color: var(--muted); margin-top: 10px; }
+
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; }
+    .audit-box {
+      background: #FFFFFF; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.09); border: 2.5px solid var(--border);
+    }
+    .audit-box.good { border-color: #10B981; }
+    .audit-box.bad { border-color: #FCA5A5; }
+    .audit-bar {
+      padding: 15px 22px; display: flex; justify-content: space-between; align-items: center;
+      font-weight: 800; font-size: 17px; border-bottom: 1px solid var(--border);
+    }
+    .audit-box.good .audit-bar { background: var(--emerald-soft); color: var(--emerald-text); }
+    .audit-box.bad .audit-bar { background: var(--danger-soft); color: #991B1B; }
+    .code {
+      background: #0F172A; color: #E2E8F0; font-family: var(--mono); font-size: 14.5px; line-height: 1.58;
+      padding: 18px 22px; margin: 18px 22px 14px; border-radius: 12px; white-space: pre;
+    }
+    .cg { color: #34D399; font-weight: 700; }
+    .cr { color: #FCA5A5; font-weight: 700; }
+    .cd { color: #94A3B8; }
+    .verdict { margin: 0 22px 20px; padding: 13px 16px; border-radius: 10px; font-size: 14px; line-height: 1.45; }
+    .verdict.good { background: var(--emerald-soft); color: var(--emerald-text); border: 1px solid #A7F3D0; }
+    .verdict.bad { background: var(--danger-soft); color: #991B1B; border: 1px solid #FECACA; }
+
+    /* Slide 2: Right-Click & White BG (1280x800) */
+    .s2 { padding: 48px 64px; flex-direction: column; justify-content: space-between; }
+    .s2-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; align-items: center; margin-top: 12px; }
+    .menu-mock {
+      background: #FFFFFF; border-radius: 16px; border: 1.5px solid #CBD5E1;
+      box-shadow: 0 24px 50px rgba(15,23,42,0.14); padding: 24px; position: relative;
+    }
+    .checker {
+      background-color: #FFFFFF;
+      background-image:
+        linear-gradient(45deg, #E2E8F0 25%, transparent 25%),
+        linear-gradient(-45deg, #E2E8F0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #E2E8F0 75%),
+        linear-gradient(-45deg, transparent 75%, #E2E8F0 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+    .ctx-menu {
+      position: absolute; right: 18px; bottom: 18px; width: 295px;
+      background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 12px;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.22); overflow: hidden;
+    }
+    .ctx-hdr { background: var(--cobalt); color: #FFFFFF; padding: 10px 14px; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .ctx-item { padding: 11px 16px; font-size: 14px; font-weight: 600; color: var(--text); border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; }
+    .ctx-item.hl { background: var(--cobalt-soft); color: var(--cobalt); font-weight: 800; }
+
+    .ba-card { background: #FFFFFF; border-radius: 16px; border: 1.5px solid var(--border); padding: 22px; box-shadow: 0 16px 36px rgba(15,23,42,0.08); }
+    .ba-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+    .ba-box { border-radius: 12px; overflow: hidden; border: 2px solid var(--border); text-align: center; }
+    .ba-box.bad { border-color: #FCA5A5; }
+    .ba-box.good { border-color: #10B981; }
+    .ba-stage { height: 195px; display: flex; align-items: center; justify-content: center; }
+    .ba-cap { padding: 10px; font-size: 13px; font-weight: 800; }
+
+    /* Slide 3: Batch Ripper & Amazon 2000x2000 ZIP (1280x800) */
+    .s3 { padding: 44px 56px; flex-direction: column; justify-content: space-between; }
+    .batch-window {
+      background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 16px;
+      box-shadow: 0 22px 50px rgba(15,23,42,0.12); overflow: hidden; margin-top: 14px;
+    }
+    .bw-top {
+      background: #FFFFFF; padding: 14px 22px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .bw-body { display: grid; grid-template-columns: 1fr 310px; gap: 18px; padding: 18px 22px; }
+    .bw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .pcard { background: #FFFFFF; border: 2px solid var(--cobalt); border-radius: 10px; overflow: hidden; }
+    .pcard-img { height: 124px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .pcard-badge { position: absolute; top: 8px; right: 8px; background: #0F172A; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+    .pcard-chk { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; border-radius: 5px; background: var(--cobalt); color: #FFF; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .pcard-meta { padding: 8px 10px; border-top: 1px solid var(--border); font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; }
+    .bw-side { background: #FFFFFF; border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .field-mock label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+    .field-val { border: 1px solid #CBD5E1; border-radius: 7px; padding: 8px 10px; font-size: 12.5px; font-weight: 600; background: #F8FAFC; }
+
+    /* Slide 4: Popup & $6 Lifetime Pro (1280x800) */
+    .s4 { padding: 48px 64px; flex-direction: column; justify-content: space-between; }
+    .s4-body { display: grid; grid-template-columns: 380px 1fr; gap: 44px; align-items: center; margin-top: 10px; }
+    .popup-frame {
+      background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 16px;
+      box-shadow: 0 24px 55px rgba(15,23,42,0.16); padding: 16px;
+    }
+    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .tier { background: #FFFFFF; border: 2px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 12px 30px rgba(15,23,42,0.06); }
+    .tier.pro { border-color: var(--cobalt); box-shadow: 0 14px 36px rgba(37,99,235,0.14); }
+    .tier ul { list-style: none; margin-top: 14px; font-size: 14.5px; line-height: 1.9; }
+    .tier li::before { content: "✓ "; color: var(--emerald); font-weight: 900; }
+
+    /* Promo Small 440x280 */
+    .p440 {
+      width: 440px !important; height: 280px !important; flex-direction: column; justify-content: space-between; padding: 20px 20px;
+    }
+    /* Promo Marquee 1400x560 */
+    .p1400 {
+      padding: 48px 72px; align-items: center; justify-content: space-between; gap: 48px;
+    }
+  </style>
+</head>
+<body>
+  <!-- SLIDE 1: 1280x800 ZERO PERMISSIONS -->
+  <section id="s1" class="slide s1 bg-hero">
+    <div class="s-head">
+      <div class="brand">
+        <img src="../extension/icons/icon128.png" alt="CleanSave" />
+        CleanSave Image
+      </div>
+      <div style="display:flex;gap:10px;">
+        <span class="pill pill-emerald">✓ Zero &lt;all_urls&gt; Permissions</span>
+        <span class="pill pill-cobalt">100% Open Source · Manifest V3</span>
+      </div>
+    </div>
+
+    <div class="s1-title">
+      <h1>The Safe, Zero-Permission Replacement for <span>Save Image as Type</span></h1>
+      <p>Inspect our exact <code style="font-family:var(--mono);font-weight:700;">manifest.json</code> — zero site tracking, zero cookies, zero affiliate hijacking.</p>
+    </div>
+
+    <div class="compare">
+      <div class="audit-box good">
+        <div class="audit-bar">
+          <span>✓ CleanSave Image (Auditable MV3)</span>
+          <span style="background:#10B981;color:#FFF;padding:3px 10px;border-radius:999px;font-size:12px;">SAFE</span>
+        </div>
+        <div class="code">{
+  "manifest_version": 3,
+  "permissions": [
+    <span class="cg">"contextMenus"</span>, <span class="cg">"downloads"</span>,
+    <span class="cg">"offscreen"</span>,    <span class="cg">"storage"</span>,
+    <span class="cg">"activeTab"</span>,    <span class="cg">"scripting"</span>
+  ]
+  <span class="cd">// ZERO host_permissions!</span>
+  <span class="cd">// NO &lt;all_urls&gt;, NO cookies, NO tabs</span>
+}</div>
+        <div class="verdict good">
+          <strong>Clean Chrome Install:</strong> NEVER displays the scary <em>"Read and change all your data on all websites"</em> warning. 100% local HTML5 Canvas.
+        </div>
+      </div>
+
+      <div class="audit-box bad">
+        <div class="audit-bar">
+          <span>✕ Purged / Malware Clone Extensions</span>
+          <span style="background:#DC2626;color:#FFF;padding:3px 10px;border-radius:999px;font-size:12px;">HIGH RISK</span>
+        </div>
+        <div class="code">{
+  "manifest_version": 3,
+  "permissions": [
+    <span class="cr">"tabs"</span>, <span class="cr">"cookies"</span>, <span class="cr">"webRequest"</span>,
+    "contextMenus", "downloads"
+  ],
+  "host_permissions": [
+    <span class="cr">"&lt;all_urls&gt;"</span>, <span class="cr">"https://*/*"</span>
+  ]
+}</div>
+        <div class="verdict bad">
+          <strong>Chrome Danger Warning:</strong> Can read checkout pages, inject affiliate cookies across 578 retail stores, and phone home in the background.
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--muted);font-size:14px;font-weight:600;">
+      Unlimited Free Right-Click JPG / PNG / WebP · Pure Local HTML5 Canvas · Optional $9 One-Time Pro Upgrade
+    </div>
+  </section>
+
+  <!-- SLIDE 2: 1280x800 RIGHT CLICK + WHITE BG -->
+  <section id="s2" class="slide s2 bg-hero">
+    <div class="s-head">
+      <div class="brand">
+        <img src="../extension/icons/icon128.png" alt="CleanSave" />
+        CleanSave Image
+      </div>
+      <span class="pill pill-cobalt">Right-Click WebP / AVIF → JPG (White BG) · PNG · WebP</span>
+    </div>
+
+    <div class="s1-title" style="margin-top:4px;">
+      <h1>Convert WebP &amp; AVIF Instantly — <span>Zero Black Backgrounds</span></h1>
+      <p>Transparent PNG and WebP images automatically composite onto pure white (#FFFFFF) when saved as JPG.</p>
+    </div>
+
+    <div class="s2-grid">
+      <div class="menu-mock">
+        <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px;">product-sneaker-hero.webp (Transparent WebP · 1400×1400)</div>
+        <div class="checker" style="height:340px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid #CBD5E1;">
+          <svg width="210" height="210" viewBox="0 0 200 200" fill="none">
+            <circle cx="100" cy="100" r="72" fill="#2563EB"/>
+            <path d="M55 118C68 82 95 66 135 64C144 64 150 72 147 82L134 122C131 131 122 138 111 138H65C56 138 51 129 55 118Z" fill="#FFFFFF"/>
+            <circle cx="106" cy="96" r="14" fill="#10B981"/>
+          </svg>
+        </div>
+        <div class="ctx-menu">
+          <div class="ctx-hdr">
+            <img src="../extension/icons/icon32.png" style="width:20px;height:20px;border-radius:4px;" />
+            CleanSave Image
+          </div>
+          <div class="ctx-item hl"><span>Save as JPG (92%)</span><span>White BG ✓</span></div>
+          <div class="ctx-item"><span>Save as PNG (Lossless)</span><span style="color:var(--muted);">Alpha</span></div>
+          <div class="ctx-item" style="border:none;"><span>Save as WebP (90%)</span><span style="color:var(--muted);">Compact</span></div>
+        </div>
+      </div>
+
+      <div class="ba-card">
+        <div style="font-size:18px;font-weight:800;">Transparent PNG / WebP → JPG Output</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;">Standard converters fill missing alpha with ugly black. CleanSave composites crisp pure white automatically.</div>
+        <div class="ba-pair">
+          <div class="ba-box bad">
+            <div class="ba-stage" style="background:#000000;">
+              <svg width="120" height="120" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="72" fill="#2563EB"/>
+                <path d="M55 118C68 82 95 66 135 64C144 64 150 72 147 82L134 122C131 131 122 138 111 138H65C56 138 51 129 55 118Z" fill="#FFFFFF"/>
+                <circle cx="106" cy="96" r="14" fill="#10B981"/>
+              </svg>
+            </div>
+            <div class="ba-cap" style="background:var(--danger-soft);color:#991B1B;">✕ Other Tools (Black BG)</div>
+          </div>
+          <div class="ba-box good">
+            <div class="ba-stage" style="background:#FFFFFF;">
+              <svg width="120" height="120" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="72" fill="#2563EB"/>
+                <path d="M55 118C68 82 95 66 135 64C144 64 150 72 147 82L134 122C131 131 122 138 111 138H65C56 138 51 129 55 118Z" fill="#FFFFFF"/>
+                <circle cx="106" cy="96" r="14" fill="#10B981"/>
+              </svg>
+            </div>
+            <div class="ba-cap" style="background:var(--emerald-soft);color:var(--emerald-text);">✓ CleanSave (#FFFFFF White BG)</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;background:var(--cobalt-soft);border:1px solid #BFDBFE;border-radius:10px;font-size:13.5px;color:#1E40AF;font-weight:600;">
+          ⚡ Saved product-sneaker-hero.jpg (1400×1400 · 168 KB) — Converted 100% locally
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--muted);font-size:14px;font-weight:600;">
+      Supports WebP, AVIF, PNG, JPG, GIF &amp; SVG · Zero Cloud Uploads · Works Offline
+    </div>
+  </section>
+
+  <!-- SLIDE 3: 1280x800 BATCH ZIP & E-COMMERCE PRESETS -->
+  <section id="s3" class="slide s3 bg-hero">
+    <div class="s-head">
+      <div class="brand">
+        <img src="../extension/icons/icon128.png" alt="CleanSave" />
+        CleanSave Batch Converter &amp; ZIP Ripper
+      </div>
+      <span class="pill pill-cobalt">Built for Amazon, Shopify &amp; Etsy Sellers</span>
+    </div>
+
+    <div class="s1-title" style="margin-top:2px;">
+      <h1>Scan Active Tab Images, Resize to <span>2000×2000 White BG</span> &amp; ZIP</h1>
+    </div>
+
+    <div class="batch-window">
+      <div class="bw-top">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <strong style="font-size:15px;">Scanned: store.example.com/collections/featured (6 high-res images)</strong>
+          <span class="pill pill-cobalt" style="padding:4px 10px;font-size:12px;">Filter: ≥ 500px</span>
+          <span class="pill pill-emerald" style="padding:4px 10px;font-size:12px;">activeTab Only</span>
+        </div>
+        <span class="pill pill-emerald" style="padding:4px 10px;font-size:12px;">Pro Unlocked · Unlimited ZIP</span>
+      </div>
+      <div class="bw-body">
+        <div class="bw-grid">
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">WEBP</span><div style="width:68px;height:68px;border-radius:16px;background:#2563EB;"></div></div>
+            <div class="pcard-meta"><span>hero-ceramic-mug</span><span style="color:var(--muted);">1600×1200</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">AVIF</span><div style="width:68px;height:68px;border-radius:999px;background:#10B981;"></div></div>
+            <div class="pcard-meta"><span>angle-top-view</span><span style="color:var(--muted);">1800×1800</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">WEBP</span><div style="width:76px;height:52px;border-radius:12px;background:#3B82F6;"></div></div>
+            <div class="pcard-meta"><span>lifestyle-desk</span><span style="color:var(--muted);">2048×1365</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">PNG</span><div style="width:64px;height:64px;border-radius:10px;background:#0EA5E9;transform:rotate(12deg);"></div></div>
+            <div class="pcard-meta"><span>transparent-cutout</span><span style="color:var(--muted);">1500×1500</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">WEBP</span><div style="width:70px;height:70px;border-radius:20px;background:#1D4ED8;"></div></div>
+            <div class="pcard-meta"><span>packaging-box</span><span style="color:var(--muted);">1200×900</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img checker"><span class="pcard-chk">✓</span><span class="pcard-badge">AVIF</span><div style="width:70px;height:70px;border-radius:999px;background:#059669;"></div></div>
+            <div class="pcard-meta"><span>color-variant-02</span><span style="color:var(--muted);">1400×1400</span></div>
+          </div>
+        </div>
+
+        <div class="bw-side">
+          <div style="font-size:13px;font-weight:800;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;">
+            <span>Batch Export</span><span style="color:var(--cobalt);">6 Selected</span>
+          </div>
+          <div class="field-mock"><label>Target Format</label><div class="field-val">JPG (White Background #FFFFFF)</div></div>
+          <div class="field-mock"><label>E-Commerce Resize Preset</label><div class="field-val" style="border-color:var(--cobalt);background:var(--cobalt-soft);color:var(--cobalt);">Square 2000×2000 White BG (Amazon)</div></div>
+          <div class="field-mock"><label>Auto Filename Pattern</label><div class="field-val" style="font-family:var(--mono);">{domain}-{date}-{index}.jpg</div></div>
+          <div class="field-mock"><label>Quality</label><div class="field-val">92% (Custom Pro Slider)</div></div>
+          <div style="background:var(--cobalt);color:#FFF;text-align:center;padding:12px;border-radius:9px;font-weight:800;font-size:14px;margin-top:auto;">
+            Convert &amp; Download ZIP (6 images)
+          </div>
+          <div style="font-size:11.5px;color:var(--emerald-text);font-weight:700;text-align:center;">
+            ✓ Built locally via zero-dependency PKZIP
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--muted);font-size:14px;font-weight:600;">
+      Also includes Offline Drag-and-Drop &amp; Ctrl+V Clipboard Converter for local WebP / AVIF folders
+    </div>
+  </section>
+
+  <!-- SLIDE 4: 1280x800 POPUP + $6 ONE-TIME PRO -->
+  <section id="s4" class="slide s4 bg-hero">
+    <div class="s-head">
+      <div class="brand">
+        <img src="../extension/icons/icon128.png" alt="CleanSave" />
+        CleanSave Image
+      </div>
+      <span class="pill pill-emerald">Free Forever · Optional $9 One-Time Pro</span>
+    </div>
+
+    <div class="s1-title" style="margin-top:4px;">
+      <h1>No Subscriptions. No Accounts. <span>Offline License Key.</span></h1>
+      <p>Core right-click conversion is unlimited and free forever. Pay $9 once to unlock batch ZIP &amp; seller presets.</p>
+    </div>
+
+    <div class="s4-body">
+      <div class="popup-frame">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <img src="../extension/icons/icon48.png" style="width:30px;height:30px;border-radius:7px;" />
+            <div><div style="font-weight:800;font-size:15px;">CleanSave Image</div><div style="font-size:11px;color:var(--muted);">100% Local · Zero Telemetry</div></div>
+          </div>
+          <span class="pill pill-emerald" style="font-size:11px;padding:3px 9px;">Zero &lt;all_urls&gt;</span>
+        </div>
+        <div style="background:var(--cobalt-soft);border:1px solid #BFDBFE;border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:8px;">Batch Page Image Ripper &amp; ZIP</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;background:var(--cobalt);color:#FFF;text-align:center;padding:8px;border-radius:7px;font-weight:700;font-size:13px;">Scan Page Images</div>
+            <div style="background:#FFF;border:1px solid #CBD5E1;padding:8px 12px;border-radius:7px;font-weight:700;font-size:13px;">Local Drop</div>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+          <div style="display:flex;justify-content:space-between;"><strong>JPG Quality</strong><strong style="color:var(--cobalt);">92%</strong></div>
+          <div style="height:6px;background:#DBEAFE;border-radius:99px;"><div style="width:84%;height:100%;background:var(--cobalt);border-radius:99px;"></div></div>
+          <div style="display:flex;justify-content:space-between;"><strong>Transparent → JPG Fill</strong><span style="font-family:var(--mono);font-weight:700;">#FFFFFF</span></div>
+          <div style="display:flex;justify-content:space-between;"><strong>Resize Preset</strong><span style="color:var(--cobalt);font-weight:700;">Square 2000×2000</span></div>
+          <div style="display:flex;justify-content:space-between;"><strong>Filename</strong><span style="font-family:var(--mono);">{domain}-{date}-{index}</span></div>
+        </div>
+        <div style="margin-top:12px;background:var(--emerald-soft);border:1px solid #A7F3D0;border-radius:10px;padding:10px 12px;color:var(--emerald-text);font-weight:800;font-size:12.5px;">
+          ✓ CleanSave Pro Active (Lifetime · Offline Verified)
+        </div>
+      </div>
+
+      <div class="tier-grid">
+        <div class="tier">
+          <span class="pill pill-emerald" style="font-size:12px;padding:4px 10px;">Free Forever</span>
+          <div style="font-size:40px;font-weight:900;margin-top:10px;">$0</div>
+          <div style="color:var(--muted);font-size:13.5px;">No login, no watermarks, unlimited saves</div>
+          <ul>
+            <li>Right-click Save as JPG, PNG, WebP</li>
+            <li>Transparent PNG/WebP → White BG JPG</li>
+            <li>Zero broad site permissions</li>
+            <li>Page image scanner + 3-image trial ZIP</li>
+            <li>Offline Local Drop / Ctrl+V converter</li>
+          </ul>
+        </div>
+
+        <div class="tier pro">
+          <span class="pill pill-cobalt" style="font-size:12px;padding:4px 10px;">One-Time Lifetime</span>
+          <div style="font-size:40px;font-weight:900;margin-top:10px;color:var(--cobalt);">$9</div>
+          <div style="color:var(--muted);font-size:13.5px;">Pay once, verify key offline forever</div>
+          <ul>
+            <li><strong>Unlimited</strong> Batch Page Ripper &amp; ZIP</li>
+            <li>2000×2000 / 1200×1200 / 1080×1080 White BG</li>
+            <li>Custom Max Width &amp; Quality Sliders</li>
+            <li>Custom Transparent Background Color</li>
+            <li>Auto Filename Patterns ({domain}-{date})</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--muted);font-size:14px;font-weight:600;">
+      100% Open Source · Pure Client-Side Chrome MV3 · Zero Telemetry
+    </div>
+  </section>
+
+  <!-- PROMO SMALL: 440x280 -->
+  <section id="p440" class="slide p440 bg-cobalt">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="../extension/icons/icon128.png" style="width:38px;height:38px;border-radius:9px;border:2px solid rgba(255,255,255,0.4);" />
+        <div style="font-size:17px;font-weight:900;letter-spacing:-0.02em;">CleanSave Image</div>
+      </div>
+      <span class="pill pill-white" style="font-size:10.5px;padding:3px 9px;white-space:nowrap;">Zero &lt;all_urls&gt;</span>
+    </div>
+    <div>
+      <div style="font-size:27px;font-weight:900;line-height:1.15;letter-spacing:-0.02em;">
+        Safe Save Image as Type<br/>(JPG · PNG · WebP)
+      </div>
+      <div style="font-size:13.5px;opacity:0.9;margin-top:8px;">
+        Zero site permissions · White BG for transparent JPG · Batch ZIP
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;font-size:11.5px;font-weight:700;">
+      <span style="background:#10B981;padding:5px 10px;border-radius:6px;">✓ Open Source MV3</span>
+      <span style="background:rgba(255,255,255,0.16);padding:5px 10px;border-radius:6px;">100% Local Canvas</span>
+    </div>
+  </section>
+
+  <!-- PROMO MARQUEE: 1400x560 -->
+  <section id="p1400" class="slide p1400 bg-cobalt">
+    <div style="max-width:740px;">
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <span class="pill pill-white">✓ Zero &lt;all_urls&gt; Site Permissions</span>
+        <span class="pill pill-white">100% Open Source · Manifest V3</span>
+      </div>
+      <h1 style="font-size:54px;font-weight:900;line-height:1.08;letter-spacing:-0.03em;margin-bottom:18px;">
+        CleanSave Image:<br/>Save WebP &amp; AVIF as JPG/PNG Safely
+      </h1>
+      <p style="font-size:21px;opacity:0.92;line-height:1.45;margin-bottom:26px;">
+        The auditable, zero-tracking replacement for <em>Save Image as Type</em>. Transparent PNG/WebP → crisp white-background JPG, plus Pro batch page ZIP &amp; Amazon/Shopify 2000×2000 presets.
+      </p>
+      <div style="display:flex;gap:14px;font-size:15px;font-weight:800;">
+        <span style="background:#10B981;padding:10px 18px;border-radius:9px;">✓ Unlimited Free Single Saves</span>
+        <span style="background:rgba(255,255,255,0.16);padding:10px 18px;border-radius:9px;">100% Local · Zero Cloud Uploads</span>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;color:var(--text);border-radius:20px;padding:28px;width:440px;box-shadow:0 28px 60px rgba(15,23,42,0.32);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <img src="../extension/icons/icon128.png" style="width:52px;height:52px;border-radius:12px;" />
+        <div>
+          <div style="font-size:20px;font-weight:900;">CleanSave Image</div>
+          <div style="font-size:13px;color:var(--emerald-text);font-weight:700;">✓ Verified Minimal Permissions</div>
+        </div>
+      </div>
+      <div style="background:#0F172A;color:#E2E8F0;font-family:var(--mono);font-size:13px;line-height:1.6;padding:16px;border-radius:12px;margin-bottom:14px;white-space:pre;">"permissions": [
+  <span class="cg">"contextMenus"</span>, <span class="cg">"downloads"</span>,
+  <span class="cg">"offscreen"</span>,    <span class="cg">"storage"</span>,
+  <span class="cg">"activeTab"</span>,    <span class="cg">"scripting"</span>
+]
+<span class="cd">// NO &lt;all_urls&gt; · NO cookies · NO tabs</span></div>
+      <div style="background:var(--cobalt-soft);color:var(--cobalt);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;">
+        Right-Click JPG (White BG) · PNG · WebP · Batch ZIP
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const id = new URLSearchParams(location.search).get('slide') || 's1';
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  </script>
+</body>
+</html>

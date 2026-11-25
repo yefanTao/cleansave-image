@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanSave Image</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="popup-body">
+  <header class="popup-header">
+    <div class="brand">
+      <img src="icons/icon48.png" alt="CleanSave" />
+      <div>
+        <div class="brand-title">CleanSave Image</div>
+        <div class="brand-sub">Right-click any image to convert</div>
+      </div>
+    </div>
+    <span id="headerBadge" class="pill pill-emerald">Zero &lt;all_urls&gt;</span>
+  </header>
+
+  <section class="action-hero">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <strong style="font-size:13px;">Batch Page Image Ripper &amp; ZIP</strong>
+      <span id="batchProTag" class="pro-tag">Pro · 3 Free</span>
+    </div>
+    <div class="muted" style="font-size:11.5px;margin-top:2px;">
+      Scans only the active tab when you click — converts WebP/AVIF to JPG/PNG &amp; zips locally.
+    </div>
+    <div class="action-hero-row">
+      <button id="scanPageBtn" class="btn btn-primary btn-block" type="button">
+        Scan Page Images
+      </button>
+      <button id="openLocalBtn" class="btn btn-secondary" type="button" title="Drop or paste local WebP/AVIF images">
+        Local Drop
+      </button>
+    </div>
+    <div id="scanStatus" class="status-msg"></div>
+  </section>
+
+  <section class="card settings-card">
+    <div class="section-heading">
+      <span>Conversion Settings</span>
+      <span id="settingsTierLabel" class="subtle">Free Defaults</span>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="jpgQuality">
+        <span>JPG Quality <span class="pro-tag" data-pro-pill>Pro</span></span>
+        <span id="jpgQualityVal" class="range-val">92%</span>
+      </label>
+      <div class="range-row">
+        <input id="jpgQuality" type="range" min="50" max="100" step="1" value="92" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="webpQuality">
+        <span>WebP Quality <span class="pro-tag" data-pro-pill>Pro</span></span>
+        <span id="webpQualityVal" class="range-val">90%</span>
+      </label>
+      <div class="range-row">
+        <input id="webpQuality" type="range" min="50" max="100" step="1" value="90" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="transparentBg">
+        <span>Transparent → JPG Fill <span class="pro-tag" data-pro-pill>Pro</span></span>
+        <span class="subtle" style="font-weight:400;">Default #FFFFFF</span>
+      </label>
+      <div class="color-row">
+        <input id="transparentBgPicker" type="color" value="#FFFFFF" />
+        <input id="transparentBg" class="input mono" type="text" value="#FFFFFF" maxlength="7" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="resizePreset">
+        <span>E-Commerce Resize Preset <span class="pro-tag" data-pro-pill>Pro</span></span>
+      </label>
+      <select id="resizePreset" class="select">
+        <option value="original">Original Size</option>
+        <option value="square-2000">Square 2000×2000 White BG (Amazon / Etsy)</option>
+        <option value="square-1200">Square 1200×1200 White BG (Shopify)</option>
+        <option value="square-1080">Square 1080×1080 White BG (Social)</option>
+        <option value="max-width">Custom Max Width</option>
+      </select>
+    </div>
+
+    <div id="customMaxWidthWrap" class="field hidden">
+      <label class="field-label" for="customMaxWidth">
+        <span>Max Width (px)</span>
+      </label>
+      <input id="customMaxWidth" class="input" type="number" min="100" max="8000" step="10" value="1600" />
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="filenamePattern">
+        <span>Auto Filename Pattern <span class="pro-tag" data-pro-pill>Pro</span></span>
+      </label>
+      <input id="filenamePattern" class="input mono" type="text" value="{name}" placeholder="{domain}-{date}-{index}" />
+      <div class="chip-row">
+        <button type="button" class="chip" data-pattern="{name}">{name}</button>
+        <button type="button" class="chip" data-pattern="{domain}-{date}-{index}">{domain}-{date}-{index}</button>
+        <button type="button" class="chip" data-pattern="{name}-{width}x{height}">{name}-{width}x{height}</button>
+      </div>
+    </div>
+
+    <div class="field" style="padding-top:4px;border-top:1px solid var(--border);">
+      <label class="toggle-row">
+        <span>Ask where to save each file (Save As dialog)</span>
+        <input id="saveAsDialog" type="checkbox" />
+      </label>
+    </div>
+  </section>
+
+  <section id="proCard" class="card pro-card">
+    <div id="proLockedView">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <strong style="font-size:13px;">Unlock CleanSave Pro — $9 One-Time</strong>
+        <a id="buyProLink" href="https://yefantao.github.io/cleansave-image/#pro" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:700;">Get Key →</a>
+      </div>
+      <div class="muted" style="font-size:11.5px;margin-top:3px;">
+        Unlimited batch ZIPs, 2000×2000 white-BG square presets, custom quality &amp; auto filenames. Zero subscription. (Fills transparency with #FFFFFF — not AI background removal; strict no-CORS CDNs use Local Drop.)
+      </div>
+      <div class="license-row">
+        <input id="licenseKeyInput" class="input mono" type="text" placeholder="CSPRO-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <button id="activateKeyBtn" class="btn btn-primary btn-sm" type="button">Unlock</button>
+      </div>
+      <div id="licenseStatus" class="status-msg"></div>
+    </div>
+
+    <div id="proUnlockedView" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <strong style="color:var(--emerald-text);font-size:13px;">✓ CleanSave Pro Active (Lifetime)</strong>
+        <button id="deactivateKeyBtn" class="btn btn-secondary btn-sm" type="button">Remove Key</button>
+      </div>
+      <div class="subtle mono" id="activeKeyMask" style="font-size:11.5px;margin-top:4px;"></div>
+    </div>
+  </section>
+
+  <footer class="popup-footer">
+    <span>100% Local · Zero Telemetry</span>
+    <span>v1.0.0 · Open Source</span>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

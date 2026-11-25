@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CleanSave Image — Automated Test Suite</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #F8FAFC; color: #0F172A; }
+    .pass { color: #047857; font-weight: 600; }
+    .fail { color: #DC2626; font-weight: 700; }
+    pre { background: #0F172A; color: #E2E8F0; padding: 12px; border-radius: 8px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>CleanSave Image — Browser Engine Tests</h1>
+  <ul id="log"></ul>
+  <pre id="test-result-json">RUNNING</pre>
+
+  <script>
+    async function postReport(payload) {
+      const json = JSON.stringify(payload);
+      document.getElementById('test-result-json').textContent = json;
+      try {
+        await fetch('/__report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: json,
+        });
+      } catch {}
+    }
+    window.addEventListener('error', (e) => {
+      postReport({ fatal: 'window.error: ' + (e.message || e.error) });
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      postReport({ fatal: 'unhandledrejection: ' + (e.reason?.message || e.reason) });
+    });
+  </script>
+  <script type="module">
+    import {
+      buildOutputFilename,
+      computeOutputGeometry,
+      convertImageBlob,
+      generateLicenseKey,
+      verifyLicenseKey,
+    } from '../extension/lib/core.js';
+    import { buildZipUint8Array, crc32 } from '../extension/lib/zip.js';
+
+    const results = [];
+    let generatedZipBase64 = '';
+
+    function assert(cond, msg) {
+      if (!cond) throw new Error(msg);
+    }
+
+    async function runTest(name, fn) {
+      const li = document.createElement('li');
+      try {
+        const detail = await fn();
+        results.push({ name, status: 'PASS', detail: detail || 'ok' });
+        li.className = 'pass';
+        li.textContent = `PASS: ${name} (${detail || 'ok'})`;
+      } catch (err) {
+        results.push({ name, status: 'FAIL', error: err?.message || String(err) });
+        li.className = 'fail';
+        li.textContent = `FAIL: ${name} — ${err?.message || err}`;
+      }
+      document.getElementById('log').appendChild(li);
+    }
+
+    function createSyntheticTransparentCanvas(w = 64, h = 64) {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(Math.floor(w * 0.25), Math.floor(h * 0.25), Math.floor(w * 0.5), Math.floor(h * 0.5));
+      return c;
+    }
+
+    async function canvasToBlob(canvas, mime, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error(`toBlob failed for ${mime}`))), mime, quality);
+      });
+    }
+
+    async function samplePixel(blob, x, y) {
+      const bmp = await createImageBitmap(blob);
+      const c = document.createElement('canvas');
+      c.width = bmp.width;
+      c.height = bmp.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(bmp, 0, 0);
+      const data = ctx.getImageData(x, y, 1, 1).data;
+      bmp.close();
+      return { r: data[0], g: data[1], b: data[2], a: data[3], w: c.width, h: c.height };
+    }
+
+    function uint8ToBase64(bytes) {
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+
+    (async () => {
+      let jpgFromTransparent = null;
+      let pngFromWebp = null;
+
+      await runTest('Transparent PNG -> JPG fills crisp white (#FFFFFF) background', async () => {
+        const srcPng = await canvasToBlob(createSyntheticTransparentCanvas(64, 64), 'image/png');
+        const out = await convertImageBlob(srcPng, { format: 'jpg', quality: 95, transparentBg: '#FFFFFF' });
+        assert(out.mime === 'image/jpeg', `Expected image/jpeg, got ${out.mime}`);
+        const bytes = new Uint8Array(await out.blob.arrayBuffer());
+        assert(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff, 'Invalid JPEG magic header');
+        const corner = await samplePixel(out.blob, 2, 2);
+        const center = await samplePixel(out.blob, 32, 32);
+        assert(corner.r >= 250 && corner.g >= 250 && corner.b >= 250, `Corner not white: rgb(${corner.r},${corner.g},${corner.b})`);
+        assert(center.b > 200 && center.r < 80, `Center not Cobalt Blue: rgb(${center.r},${center.g},${center.b})`);
+        jpgFromTransparent = bytes;
+        return `corner=rgb(${corner.r},${corner.g},${corner.b}), center=rgb(${center.r},${center.g},${center.b}), ${bytes.length}B`;
+      });
+
+      await runTest('Transparent PNG -> JPG supports custom Pro background fill (#F0F9FF)', async () => {
+        const srcPng = await canvasToBlob(createSyntheticTransparentCanvas(64, 64), 'image/png');
+        const out = await convertImageBlob(srcPng, { format: 'jpg', quality: 95, transparentBg: '#F0F9FF' });
+        const corner = await samplePixel(out.blob, 2, 2);
+        assert(corner.r >= 230 && corner.g >= 242 && corner.b >= 250, `Unexpected custom BG: rgb(${corner.r},${corner.g},${corner.b})`);
+        return `corner=rgb(${corner.r},${corner.g},${corner.b})`;
+      });
+
+      await runTest('WebP -> PNG lossless conversion preserves full alpha transparency', async () => {
+        const srcWebp = await canvasToBlob(createSyntheticTransparentCanvas(64, 64), 'image/webp', 0.92);
+        const wBytes = new Uint8Array(await srcWebp.arrayBuffer());
+        assert(wBytes[0] === 0x52 && wBytes[1] === 0x49 && wBytes[8] === 0x57 && wBytes[9] === 0x45, 'Source is not WebP');
+        const out = await convertImageBlob(srcWebp, { format: 'png' });
+        const pBytes = new Uint8Array(await out.blob.arrayBuffer());
+        assert(pBytes[0] === 0x89 && pBytes[1] === 0x50 && pBytes[2] === 0x4e && pBytes[3] === 0x47, 'Invalid PNG signature');
+        const corner = await samplePixel(out.blob, 2, 2);
+        assert(corner.a === 0, `Expected transparent alpha=0, got ${corner.a}`);
+        pngFromWebp = pBytes;
+        return `PNG ${pBytes.length}B, corner alpha=${corner.a}`;
+      });
+
+      await runTest('WebP -> JPG fills white background cleanly', async () => {
+        const srcWebp = await canvasToBlob(createSyntheticTransparentCanvas(64, 64), 'image/webp', 0.90);
+        const out = await convertImageBlob(srcWebp, { format: 'jpg', quality: 92, transparentBg: '#FFFFFF' });
+        const corner = await samplePixel(out.blob, 2, 2);
+        assert(corner.r >= 250 && corner.g >= 250 && corner.b >= 250, `WebP->JPG corner not white: ${JSON.stringify(corner)}`);
+        return `corner=rgb(${corner.r},${corner.g},${corner.b})`;
+      });
+
+      await runTest('JPG -> WebP conversion outputs valid WebP binary', async () => {
+        const srcJpg = await canvasToBlob(createSyntheticTransparentCanvas(64, 64), 'image/jpeg', 0.9);
+        const out = await convertImageBlob(srcJpg, { format: 'webp', quality: 90 });
+        const bytes = new Uint8Array(await out.blob.arrayBuffer());
+        assert(bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57 && bytes[9] === 0x45, 'Invalid RIFF/WEBP header');
+        return `WebP ${bytes.length}B`;
+      });
+
+      await runTest('Browser native AVIF decoding supported for createImageBitmap pipeline', async () => {
+        assert(typeof ImageDecoder !== 'undefined', 'ImageDecoder API unavailable');
+        const avifOk = await ImageDecoder.isTypeSupported('image/avif');
+        const webpOk = await ImageDecoder.isTypeSupported('image/webp');
+        assert(avifOk === true && webpOk === true, `Expected AVIF & WebP decode support, got avif=${avifOk}, webp=${webpOk}`);
+        return 'image/avif=supported, image/webp=supported';
+      });
+
+      await runTest('SVG -> JPG fallback decoder handles vector images', async () => {
+        const svgText = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect x="20" y="10" width="40" height="20" fill="#10B981"/></svg>';
+        const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
+        const out = await convertImageBlob(svgBlob, { format: 'jpg', quality: 92, transparentBg: '#FFFFFF' });
+        const corner = await samplePixel(out.blob, 2, 2);
+        const center = await samplePixel(out.blob, 40, 20);
+        assert(out.width === 80 && out.height === 40, `Expected 80x40, got ${out.width}x${out.height}`);
+        assert(corner.r >= 250 && corner.g >= 250 && corner.b >= 250, 'SVG->JPG corner not white');
+        assert(center.g > 150, 'SVG->JPG center not emerald');
+        return '80x40, corner white, center emerald';
+      });
+
+      await runTest('Pro E-Commerce Preset: Square 2000x2000 White BG contain-fit (400x200 -> 2000x2000)', async () => {
+        const c = document.createElement('canvas');
+        c.width = 400;
+        c.height = 200;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(0, 0, 400, 200);
+        const rectBlob = await canvasToBlob(c, 'image/png');
+        const out = await convertImageBlob(rectBlob, { format: 'jpg', quality: 92, resizePreset: 'square-2000', transparentBg: '#FFFFFF' });
+        assert(out.width === 2000 && out.height === 2000, `Expected 2000x2000, got ${out.width}x${out.height}`);
+        const topPad = await samplePixel(out.blob, 1000, 100);
+        const middle = await samplePixel(out.blob, 1000, 1000);
+        assert(topPad.r >= 250 && topPad.g >= 250 && topPad.b >= 250, 'Top letterbox pad not white');
+        assert(middle.b > 200 && middle.r < 80, 'Center product area not Cobalt Blue');
+        return '2000x2000, topPad=white, center=cobalt';
+      });
+
+      await runTest('Max-Width resize downscales wide images and never upscales small images', async () => {
+        const g1 = computeOutputGeometry(1200, 600, 'max-width', 600);
+        assert(g1.canvasW === 600 && g1.canvasH === 300, `Expected 600x300, got ${g1.canvasW}x${g1.canvasH}`);
+        const g2 = computeOutputGeometry(300, 200, 'max-width', 800);
+        assert(g2.canvasW === 300 && g2.canvasH === 200, `Expected no upscale 300x200, got ${g2.canvasW}x${g2.canvasH}`);
+        return '1200x600->600x300, 300x200->300x200';
+      });
+
+      await runTest('Filename pattern & path-traversal sanitization', async () => {
+        const f1 = buildOutputFilename('{domain}-{date}-{index}', {
+          srcUrl: 'https://cdn.shopify.com/s/files/product-hero.webp?v=123',
+          pageUrl: 'https://www.myshop.com/products/mug',
+          format: 'jpg',
+          index: 4,
+          date: new Date(2026, 10, 25),
+        });
+        assert(f1 === 'myshop.com-2026-11-25-004.jpg', `Unexpected filename: ${f1}`);
+        const f2 = buildOutputFilename('{name}', {
+          name: '../../evil:file*name?.webp',
+          format: 'png',
+        });
+        assert(!f2.includes('..') && !f2.includes('/') && !f2.includes('\\') && f2.endsWith('.png'), `Unsafe filename: ${f2}`);
+        return `${f1} | ${f2}`;
+      });
+
+      await runTest('Offline Pro License Key checksum verification (zero server)', async () => {
+        const validKey = generateLicenseKey('K9M2V7QX');
+        assert(verifyLicenseKey(validKey).valid === true, `Valid key rejected: ${validKey}`);
+        assert(verifyLicenseKey('  ' + validKey.toLowerCase() + '  ').valid === true, 'Lowercase/whitespace valid key rejected');
+        const badChecksum = validKey.slice(0, -1) + (validKey.endsWith('A') ? 'B' : 'A');
+        assert(verifyLicenseKey(badChecksum).valid === false, 'Tampered checksum accepted');
+        assert(verifyLicenseKey('CSPRO-0000-1111-OOOO').valid === false, 'Invalid alphabet accepted');
+        assert(verifyLicenseKey('FREE-KEY').valid === false, 'Malformed key accepted');
+        return `verified ${validKey}`;
+      });
+
+      await runTest('Pure-JS PKZIP archive builder (CRC-32 + deduplication + EOCD)', async () => {
+        const crcHello = crc32(new TextEncoder().encode('123456789'));
+        assert(crcHello === 0xcbf43926, `CRC-32 mismatch: 0x${crcHello.toString(16)}`);
+        const zipBytes = buildZipUint8Array([
+          { name: 'product.jpg', data: jpgFromTransparent },
+          { name: 'product.jpg', data: jpgFromTransparent },
+          { name: 'icon.png', data: pngFromWebp },
+        ]);
+        const dv = new DataView(zipBytes.buffer);
+        assert(dv.getUint32(0, true) === 0x04034b50, 'Missing PKZIP local header signature');
+        assert(dv.getUint32(zipBytes.length - 22, true) === 0x06054b50, 'Missing PKZIP EOCD signature');
+        assert(dv.getUint16(zipBytes.length - 12, true) === 3, 'Expected 3 entries in EOCD');
+        generatedZipBase64 = uint8ToBase64(zipBytes);
+        return `ZIP ${zipBytes.length}B, 3 entries, CRC-32 standard vector verified`;
+      });
+
+      const passed = results.filter((r) => r.status === 'PASS').length;
+      const failed = results.filter((r) => r.status === 'FAIL').length;
+
+      await window.postReport({
+        summary: { total: results.length, passed, failed },
+        results,
+        sampleZipBase64: generatedZipBase64,
+      });
+    })();
+  </script>
+</body>
+</html>

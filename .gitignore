@@ -1,0 +1,10 @@
+# Private generated Pro license keys — NEVER commit to public repo!
+private/
+
+# Internal build spec & local artifacts
+CHROME_IMAGE_SAVER_SPEC.md
+.netlify/
+dist/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanSave Image — Batch Converter &amp; ZIP Ripper</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="batch-body">
+  <header class="topbar">
+    <div class="brand">
+      <img src="icons/icon48.png" alt="CleanSave" />
+      <div>
+        <div class="brand-title">CleanSave Batch Converter</div>
+        <div id="sourceSubtitle" class="brand-sub">100% Local Canvas Conversion · Zero External Servers</div>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button id="tabPage" class="tab-btn active" type="button" role="tab">Scanned Page Images</button>
+      <button id="tabLocal" class="tab-btn" type="button" role="tab">Local Drop / Paste Files</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="pill pill-emerald">Zero &lt;all_urls&gt;</span>
+      <span id="topProPill" class="pill pill-cobalt">Free (3 ZIP limit)</span>
+    </div>
+  </header>
+
+  <main class="batch-layout">
+    <section>
+      <div id="localDropSection" class="hidden">
+        <div id="dropzone" class="dropzone" tabindex="0">
+          <div style="font-size:16px;font-weight:700;color:var(--cobalt);margin-bottom:4px;">
+            Drop WebP, AVIF, PNG, JPG, or SVG files here
+          </div>
+          <div class="muted" style="font-size:12.5px;">
+            Or click to browse · Or press <kbd class="mono" style="background:#fff;border:1px solid var(--border-strong);border-radius:4px;padding:1px 5px;">Ctrl+V</kbd> to paste from clipboard · 100% offline
+          </div>
+          <input id="localFileInput" type="file" accept="image/*" multiple class="hidden" />
+        </div>
+      </div>
+
+      <div class="card toolbar-bar">
+        <div class="filter-group" id="minPxGroup">
+          <span class="subtle" style="font-weight:600;margin-right:2px;">Min Size:</span>
+          <button type="button" class="filter-pill" data-minpx="0">All</button>
+          <button type="button" class="filter-pill" data-minpx="200">≥ 200px</button>
+          <button type="button" class="filter-pill active" data-minpx="500">≥ 500px</button>
+          <button type="button" class="filter-pill" data-minpx="800">≥ 800px</button>
+          <button type="button" class="filter-pill" data-minpx="1200">≥ 1200px</button>
+        </div>
+
+        <div class="filter-group">
+          <select id="formatFilter" class="select" style="width:auto;padding:5px 9px;">
+            <option value="all">All Formats</option>
+            <option value="modern">WebP / AVIF Only</option>
+            <option value="PNG">PNG</option>
+            <option value="JPG">JPG</option>
+          </select>
+          <input id="searchInput" class="input" type="search" placeholder="Filter by name..." style="width:155px;padding:5px 9px;" />
+          <button id="selectAllBtn" class="btn btn-secondary btn-sm" type="button">Select Visible</button>
+          <button id="clearSelBtn" class="btn btn-secondary btn-sm" type="button">Clear</button>
+        </div>
+      </div>
+
+      <div id="gridSummary" class="muted" style="margin-bottom:10px;font-size:12px;"></div>
+      <div id="imageGrid" class="image-grid"></div>
+      <div id="emptyState" class="card empty-state hidden">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">No images match the current filter</div>
+        <div id="emptyReason" class="muted">Try lowering the Min Size filter to "All", or switch to Local Drop / Paste to convert files from your computer.</div>
+      </div>
+    </section>
+
+    <aside class="card sidebar">
+      <div class="section-heading">
+        <span>Batch Export Settings</span>
+        <span id="selectedCountPill" class="pill pill-cobalt">0 selected</span>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="outFormat"><span>Target Format</span></label>
+        <select id="outFormat" class="select">
+          <option value="jpg">JPG (White Background for Transparency)</option>
+          <option value="png">PNG (Lossless · Preserves Transparency)</option>
+          <option value="webp">WebP (Compact Modern Web)</option>
+        </select>
+      </div>
+
+      <div class="field" id="qualityField">
+        <label class="field-label" for="batchQuality">
+          <span>Quality <span class="pro-tag" data-pro-pill>Pro</span></span>
+          <span id="batchQualityVal" class="range-val">92%</span>
+        </label>
+        <div class="range-row">
+          <input id="batchQuality" type="range" min="50" max="100" value="92" />
+        </div>
+      </div>
+
+      <div class="field" id="bgFillField">
+        <label class="field-label" for="batchBgColor">
+          <span>Transparent Background Fill <span class="pro-tag" data-pro-pill>Pro</span></span>
+        </label>
+        <div class="color-row">
+          <input id="batchBgPicker" type="color" value="#FFFFFF" />
+          <input id="batchBgColor" class="input mono" type="text" value="#FFFFFF" maxlength="7" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="batchResize">
+          <span>E-Commerce Resize Preset <span class="pro-tag" data-pro-pill>Pro</span></span>
+        </label>
+        <select id="batchResize" class="select">
+          <option value="original">Original Dimensions</option>
+          <option value="square-2000">Square 2000×2000 White BG (Amazon / Etsy)</option>
+          <option value="square-1200">Square 1200×1200 White BG (Shopify)</option>
+          <option value="square-1080">Square 1080×1080 White BG (Social)</option>
+          <option value="max-width">Custom Max Width</option>
+        </select>
+      </div>
+
+      <div id="batchMaxWidthWrap" class="field hidden">
+        <label class="field-label" for="batchMaxWidth"><span>Max Width (px)</span></label>
+        <input id="batchMaxWidth" class="input" type="number" min="100" max="8000" value="1600" />
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="batchPattern">
+          <span>Filename Pattern <span class="pro-tag" data-pro-pill>Pro</span></span>
+        </label>
+        <input id="batchPattern" class="input mono" type="text" value="{domain}-{date}-{index}" />
+        <div class="chip-row">
+          <button type="button" class="chip" data-pattern="{domain}-{date}-{index}">{domain}-{date}-{index}</button>
+          <button type="button" class="chip" data-pattern="{name}">{name}</button>
+          <button type="button" class="chip" data-pattern="{name}-{width}x{height}">{name}-{width}x{height}</button>
+        </div>
+      </div>
+
+      <div id="batchLimitBanner" class="hidden" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--cobalt-soft);border:1px solid var(--cobalt-border);font-size:12px;line-height:1.45;">
+        <div id="batchLimitText" style="font-weight:700;color:var(--cobalt);margin-bottom:4px;"></div>
+        <div class="muted" style="font-size:11.5px;">Free still exports the first 3 selected images. Unlock all images &amp; unlimited batches forever for <strong>$9 one-time</strong>.</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button id="downloadZipBtn" class="btn btn-primary btn-block" type="button" disabled>
+          Convert &amp; Download ZIP
+        </button>
+        <div id="progressWrap" class="hidden">
+          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+          <div id="progressText" class="subtle" style="font-size:11.5px;"></div>
+        </div>
+        <div id="exportStatus" class="status-msg"></div>
+      </div>
+
+      <div id="proUpsellBox" class="card pro-card" style="margin-top:14px;margin-bottom:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:12.5px;">CleanSave Pro ($9 One-Time)</strong>
+          <a href="https://yefantao.github.io/cleansave-image/#pro" target="_blank" rel="noopener noreferrer" style="font-size:11.5px;font-weight:700;">Get Key →</a>
+        </div>
+        <div class="muted" style="font-size:11.5px;margin-top:3px;">
+          Free exports up to 3 images per ZIP. Unlock unlimited batch ZIPs + 2000×2000 white-BG square presets forever. (Fills transparency with #FFFFFF — not AI background removal; strict no-CORS CDNs use Local Drop.)
+        </div>
+        <div class="license-row">
+          <input id="batchKeyInput" class="input mono" type="text" placeholder="CSPRO-XXXX-XXXX-XXXX" />
+          <button id="batchUnlockBtn" class="btn btn-primary btn-sm" type="button">Unlock</button>
+        </div>
+        <div id="batchKeyStatus" class="status-msg"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="batch.js"></script>
+</body>
+</html>
