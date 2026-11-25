@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your CleanSave Pro License Key</title>
+  <style>
+    :root {
+      --bg: #F8FAFC; --surface: #FFFFFF; --border: #E2E8F0;
+      --text: #0F172A; --muted: #475569; --cobalt: #2563EB;
+      --cobalt-dark: #1D4ED8; --emerald: #10B981; --emerald-soft: #ECFDF5;
+      --emerald-text: #047857;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; max-width: 560px; width: 100%; padding: 32px; box-shadow: 0 12px 32px rgba(15,23,42,0.08); text-align: center; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--emerald-soft); color: var(--emerald-text); border: 1px solid #A7F3D0; font-size: 12.5px; font-weight: 700; margin-bottom: 14px; }
+    h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: -0.02em; }
+    p { margin: 0 0 20px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+    .key-box { background: #0F172A; color: #34D399; font-family: var(--mono); font-size: 22px; font-weight: 800; letter-spacing: 0.06em; padding: 18px 20px; border-radius: 12px; margin-bottom: 14px; user-select: all; word-break: break-all; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px 22px; border-radius: 8px; border: none; background: var(--cobalt); color: #FFF; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .btn:hover { background: var(--cobalt-dark); }
+    .steps { text-align: left; background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-top: 22px; font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+    .steps strong { color: var(--text); }
+    .err { color: #DC2626; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="badge">✓ Payment Complete · Lifetime License</div>
+    <h1>Welcome to CleanSave Pro!</h1>
+    <p id="subtext">Issuing your offline-verifiable lifetime license key...</p>
+    <div id="keyBox" class="key-box">Generating...</div>
+    <button id="copyBtn" class="btn" type="button" disabled>Copy License Key</button>
+    <div id="status" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
+
+    <div class="steps">
+      <strong>How to activate in 10 seconds:</strong>
+      <ol style="margin:8px 0 0;padding-left:20px;">
+        <li>Click the <strong>CleanSave Image</strong> icon in your Chrome toolbar.</li>
+        <li>Paste your key into the <strong>Unlock CleanSave Pro</strong> box and click <strong>Unlock</strong>.</li>
+        <li>Save this key in your notes — verification is <strong>100% offline</strong> with zero login or server required!</li>
+      </ol>
+    </div>
+
+    <div style="margin-top:20px;font-size:13px;">
+      <a href="./" style="color:var(--cobalt);font-weight:600;text-decoration:none;">← Back to CleanSave Image</a>
+    </div>
+  </main>
+
+  <script>
+    const KEY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const KEY_SALT = 'CLEANSAVE-IMAGE-PRO-V1::OFFLINE-VERIFY';
+
+    function fnvMix(input) {
+      let h1 = 0x811c9dc5;
+      let h2 = 0x9e3779b9;
+      for (let i = 0; i < input.length; i++) {
+        const ch = input.charCodeAt(i);
+        h1 ^= ch;
+        h1 = Math.imul(h1, 0x01000193) >>> 0;
+        h2 ^= ch + (i + 1) * 31;
+        h2 = Math.imul(h2 ^ (h2 >>> 13), 0x85ebca6b) >>> 0;
+      }
+      return (h1 ^ (h2 >>> 5) ^ (h2 << 7)) >>> 0;
+    }
+
+    function computeCheckCode(payload8) {
+      const norm = payload8.toUpperCase();
+      const hashA = fnvMix(`${KEY_SALT}:${norm}`);
+      const hashB = fnvMix(`${norm}::${KEY_SALT}`);
+      return (
+        KEY_ALPHABET[hashA & 31] +
+        KEY_ALPHABET[(hashA >>> 5) & 31] +
+        KEY_ALPHABET[(hashB >>> 2) & 31] +
+        KEY_ALPHABET[(hashB >>> 7) & 31]
+      );
+    }
+
+    async function deriveOrderKey(sessionId) {
+      const data = new TextEncoder().encode('CLEANSAVE-STRIPE-ORDER-V1::' + sessionId);
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      const bytes = new Uint8Array(buf);
+      let payload8 = '';
+      for (let i = 0; i < 8; i++) payload8 += KEY_ALPHABET[bytes[i] & 31];
+      return `CSPRO-${payload8.slice(0, 4)}-${payload8.slice(4, 8)}-${computeCheckCode(payload8)}`;
+    }
+
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const sessionId = (params.get('session_id') || '').trim();
+      const keyBox = document.getElementById('keyBox');
+      const copyBtn = document.getElementById('copyBtn');
+      const subtext = document.getElementById('subtext');
+      const status = document.getElementById('status');
+
+      if (!/^cs_(live|test)_[A-Za-z0-9]{20,}$/.test(sessionId)) {
+        keyBox.textContent = 'Checkout Session Required';
+        keyBox.style.color = '#FCA5A5';
+        subtext.textContent = 'Complete checkout from the CleanSave Pro page to receive your instant lifetime license key.';
+        return;
+      }
+
+      const key = await deriveOrderKey(sessionId);
+      keyBox.textContent = key;
+      subtext.textContent = 'Your unique CleanSave Pro lifetime key is ready below. Bookmark or save a copy for your records!';
+      copyBtn.disabled = false;
+      copyBtn.onclick = async () => {
+        await navigator.clipboard.writeText(key);
+        copyBtn.textContent = '✓ Copied to Clipboard!';
+        status.textContent = 'Now click the CleanSave toolbar icon in Chrome and paste it to unlock Pro.';
+        status.style.color = '#047857';
+      };
+    })();
+  </script>
+</body>
+</html>
